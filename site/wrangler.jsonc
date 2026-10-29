@@ -1,0 +1,9 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  // Static landing page for Holdfast. Build and deploy with `npm run site:deploy` from the repo root.
+  "name": "holdfast-site",
+  "compatibility_date": "2026-10-20",
+  "assets": { "directory": "./public" }
+  // Your own domain (it must be a zone in this Cloudflare account), then redeploy:
+  // ,"routes": [{ "pattern": "holdfast.example.com", "custom_domain": true }]
+}

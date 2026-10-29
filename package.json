@@ -1,0 +1,26 @@
+{
+  "name": "holdfast",
+  "version": "1.0.0",
+  "description": "Self-hosted GitHub backups on Cloudflare: scheduled full git mirrors in R2.",
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
+    "check": "wrangler types && tsc",
+    "migrate": "wrangler d1 migrations apply DB --remote",
+    "site:build": "cp src/style.css site/public/style.css && cp DEPLOY.md site/public/deploy.md && cp LIMITATIONS.md site/public/limitations.md",
+    "site:dev": "npm run site:build && wrangler dev -c site/wrangler.jsonc --port 8790",
+    "site:deploy": "npm run site:build && wrangler deploy -c site/wrangler.jsonc"
+  },
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "wrangler": "^4.154.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261023.1": true
+  }
+}

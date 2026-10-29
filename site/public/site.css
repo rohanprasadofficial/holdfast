@@ -1,0 +1,15 @@
+/* Landing page additions on top of the shared /style.css. */
+.top .links{display:flex;align-items:center;gap:22px;font-size:14px}
+.top .links a:not(.btn){color:var(--text);text-decoration:none}.top .links a:not(.btn):hover{color:var(--link)}
+.hero .tag{margin-bottom:18px}
+.cta{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:28px}
+.prompt-row{grid-template-columns:minmax(0,1fr) auto}
+.prompt{margin:12px 0 0;padding:14px 16px;border:1px dashed var(--rail);background:var(--alt);font:14px/1.65 "Geist Mono",ui-monospace,monospace}
+.c2{grid-template-columns:repeat(2,1fr)}.c3{grid-template-columns:repeat(3,1fr)}
+.feat{padding:28px}
+.feat h3{margin:14px 0 6px;font-size:15.5px;font-weight:600}
+.feat p{margin:0;color:var(--muted);font-size:14.5px}
+.step .num{font:500 12px "Geist Mono",monospace;color:var(--link)}
+.foot a{color:var(--muted)}
+@media (max-width:900px){.c3,.c2,.prompt-row{grid-template-columns:1fr}}
+@media (max-width:640px){.top .links .opt{display:none}.feat{padding:22px 20px}}

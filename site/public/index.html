@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Holdfast · Self-hosted GitHub backups</title>
+<meta name="description" content="Scheduled git mirrors of your GitHub repositories, in your own Cloudflare account. Open source. Install by giving one prompt to your coding agent.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/site.css">
+<script src="/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><path d="M14.5 5a11 11 0 0 0 0 22z" fill="#ff5e1f"/><rect x="17.5" y="5" width="11" height="22"/></svg><span>Holdfast</span></a>
+  <nav class="links">
+    <a class="opt" href="#how">How it works</a>
+    <a class="opt" href="/limitations.md">Limitations</a>
+    <a class="btn line sm" href="https://github.com/rohanprasadofficial/holdfast">GitHub</a>
+  </nav>
+</header>
+<main>
+  <section class="band"><div class="col">
+    <div class="hero">
+      <svg class="diagram" viewBox="0 0 640 150" aria-hidden="true">
+        <path class="wire" d="M120 44C200 44 200 75 280 75M120 106C200 106 200 75 280 75"/>
+        <path class="wire hot" d="M368 75H512"/>
+        <rect class="node" x="68" y="18" width="52" height="52" rx="8"/><rect class="p" x="116" y="40" width="8" height="8" rx="2"/>
+        <path class="ico" d="M88 34v20M101 40c0 7-13 5-13 14"/><circle class="ico" cx="88" cy="31" r="3"/><circle class="ico" cx="88" cy="57" r="3"/><circle class="ico" cx="101" cy="37" r="3"/>
+        <rect class="node" x="68" y="80" width="52" height="52" rx="8"/><rect class="p" x="116" y="102" width="8" height="8" rx="2"/>
+        <path class="ico" d="M85 96h16v20H85zM89 96v20"/>
+        <text class="tag-t" x="324" y="20" text-anchor="middle">Holdfast</text>
+        <rect class="vault" x="280" y="31" width="88" height="88" rx="10"/><rect class="vault-in" x="288" y="39" width="72" height="72" rx="6"/>
+        <rect class="p hot" x="276" y="71" width="8" height="8" rx="2"/><rect class="p hot" x="364" y="71" width="8" height="8" rx="2"/>
+        <g transform="translate(304 55) scale(1.25)" fill="currentColor"><path d="M14.5 5a11 11 0 0 0 0 22z" fill="#ff5e1f"/><rect x="17.5" y="5" width="11" height="22"/></g>
+        <rect class="node" x="512" y="45" width="60" height="60" rx="8"/><rect class="p" x="508" y="71" width="8" height="8" rx="2"/>
+        <ellipse class="ico" cx="542" cy="66" rx="12" ry="4"/><path class="ico" d="M530 66v18a12 4 0 0 0 24 0V66M530 75a12 4 0 0 0 24 0"/>
+        <text class="cap" x="94" y="146" text-anchor="middle">GitHub · any git</text><text class="cap" x="542" y="124" text-anchor="middle">Your R2 bucket</text>
+      </svg>
+      <span class="tag static">Open source · Self-hosted</span>
+      <h1>Hold fast to every repository.</h1>
+      <p>Holdfast keeps scheduled git mirrors of your GitHub repositories in your own Cloudflare account. If a repo is deleted, an account is suspended or GitHub is down, your code is still yours.</p>
+      <div class="cta"><a class="btn" href="#install">Install with your agent</a><a class="btn line" href="https://github.com/rohanprasadofficial/holdfast">View the code</a></div>
+    </div>
+    <div class="cells prompt-row flush" id="install">
+      <div class="cell pad">
+        <span class="label">Install · copy this and give it to your coding agent</span>
+        <p class="prompt" id="prompt">Deploy Holdfast to my Cloudflare account. Clone https://github.com/rohanprasadofficial/holdfast and follow DEPLOY.md in it step by step. Ask me which Cloudflare account and which GitHub accounts to back up, and stop whenever a step needs me.</p>
+      </div>
+      <div class="cell go"><button class="btn" type="button" data-copy="prompt">Copy prompt</button></div>
+    </div>
+  </div></section>
+
+  <section class="band"><div class="col">
+    <div class="head"><div><span class="tag static">What it does</span><h2>Built for the day GitHub isn't there.</h2></div></div>
+    <div class="cells c3 flush">
+      <div class="cell feat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10M18 10c0 5-12 3-12 7"/></svg>
+        <h3>Full git mirrors</h3><p>Every branch, tag and commit, saved as a standard git bundle. Restore with one <code>git clone</code>.</p>
+      </div>
+      <div class="cell feat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <h3>Your schedule</h3><p>Anything from every 5 minutes to every 365 days, per repository. Repos that haven't changed are skipped.</p>
+      </div>
+      <div class="cell feat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5l8-2v18M12 9h8v12M4 21h17M7 8h2M7 12h2M7 16h2M15 13h2M15 17h2"/></svg>
+        <h3>Whole accounts</h3><p>Point it at a user or an organization. New repositories are picked up every day.</p>
+      </div>
+      <div class="cell feat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/></svg>
+        <h3>Private repos</h3><p>Read-only GitHub tokens, one per owner, kept as encrypted secrets and sent only to github.com.</p>
+      </div>
+      <div class="cell feat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <h3>Locked by default</h3><p>Cloudflare Access sign-in in front of every page. Without it, the portal refuses to open.</p>
+      </div>
+      <div class="cell feat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        <h3>Deletions don't follow</h3><p>A deleted repo or a force-push never removes your copies. An optional bucket lock makes them undeletable.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="band" id="how"><div class="col">
+    <div class="head"><div><span class="tag static">How it works</span><h2>Three approvals, then it runs by itself.</h2></div></div>
+    <div class="cells c3 flush">
+      <div class="cell feat step"><span class="num">01</span><h3>Copy the prompt</h3><p>Paste it into Claude Code, Codex, Cursor or any agent that can run commands on your machine.</p></div>
+      <div class="cell feat step"><span class="num">02</span><h3>The agent deploys</h3><p>It asks which Cloudflare account and which GitHub accounts to back up, then creates the Worker, the D1 database and the R2 bucket.</p></div>
+      <div class="cell feat step"><span class="num">03</span><h3>You approve three things</h3><p>The Cloudflare login, a read-only GitHub token from a pre-filled link, and the Access sign-in. Backups start within minutes.</p></div>
+    </div>
+  </div></section>
+
+  <section class="band"><div class="col">
+    <div class="cells c2 flush">
+      <div class="cell feat"><span class="label">Cost</span><h3>About $5 a month</h3><p>The Workers Paid plan. Personal backups usually fit in R2's free 10 GB, and R2 charges nothing for downloads.</p></div>
+      <div class="cell feat"><span class="label">Limits</span><h3>Know what it doesn't do</h3><p>Git data only (no issues or pull requests yet), private repos on GitHub only, and very large repos may not finish in one run. <a href="/limitations.md">Read all limitations →</a></p></div>
+    </div>
+  </div></section>
+  <div class="band fill"><div class="col"></div></div>
+</main>
+<footer class="band"><div class="col foot">
+  <p>Holdfast is an independent open-source project. It is not affiliated with, endorsed by or sponsored by Cloudflare, Inc. or GitHub, Inc. Cloudflare and GitHub are trademarks of their respective owners.</p>
+  <span>MIT licensed</span><a href="/deploy.md">Install guide for agents</a>
+</div></footer>
+</body>
+</html>

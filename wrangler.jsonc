@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "holdfast",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-20",
+  "observability": { "enabled": true },
+  // Check for due backups every 5 minutes (also the shortest allowed schedule).
+  "triggers": { "crons": ["*/5 * * * *"] },
+  // Streaming large repos needs more than the 30s default CPU budget.
+  "limits": { "cpu_ms": 300000 },
+  "d1_databases": [{ "binding": "DB", "database_name": "holdfast", "migrations_dir": "migrations" }],
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "holdfast" }],
+  // Retention and the default schedule live in the portal's Settings page (D1 "settings" table).
+  // Lets src/index.ts import style.css as text, shared with the landing page in site/.
+  "rules": [{ "type": "Text", "globs": ["**/*.css"], "fallthrough": true }],
+  // GitHub tokens are optional secrets (GITHUB_TOKEN, GITHUB_TOKEN_<ORG>), so none is "required": that would block the first deploy.
+  // Sign-in comes from Worker-level Cloudflare Access (see DEPLOY.md). This block only simulates it for `npm run dev`.
+  "access": { "dev": { "aud": "local-dev", "identity": { "email": "you@localhost" } } }
+}

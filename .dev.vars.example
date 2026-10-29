@@ -1,0 +1,3 @@
+# Copy to .dev.vars for `npm run dev`. Optional: tokens are only needed for private repos.
+GITHUB_TOKEN=
+# GITHUB_TOKEN_ACME_INC=   # one per organization

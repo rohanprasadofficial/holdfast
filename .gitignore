@@ -1,0 +1,6 @@
+node_modules/
+.wrangler/
+.dev.vars
+site/public/style.css
+site/public/deploy.md
+site/public/limitations.md
