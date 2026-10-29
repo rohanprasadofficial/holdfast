@@ -35,14 +35,27 @@ Holdfast is small on purpose. This is what it does not do yet, and what to keep 
 Holdfast also runs on the Workers Free plan. Each run then gets only **10 ms of CPU time**, so free mode is
 deliberately small:
 
-- **At most 2 repositories are backed up every 5 minutes,** which is about 575 checks a day. Unchanged repos are quick,
-  but many repos on short schedules will run late.
-- **GitHub repositories larger than 25 MB are skipped.** They show "Too large for the Workers Free plan". Repos on
+- **At most one new copy is saved every 5 minutes.** Unchanged repos are cheap, so up to 4 are checked per run
+  (about 1,150 checks a day). Many repos on short schedules will run late.
+- **GitHub repositories larger than 50 MB are skipped.** They show "Too large for the Workers Free plan". Repos on
   other hosts can't be measured first; if one is too big, it shows as **Interrupted**.
 - **Watched accounts are listed in the background,** one per run. Very large organizations (hundreds of repos) may
   not finish listing within the CPU limit.
-- **Cloudflare tolerates the occasional overrun,** but the 25 MB cap is an estimate. A repo near it may sometimes
-  show as Interrupted.
+
+**Saving a copy goes over 10 ms.** Measured on a real Free account (October 2026), CPU time per run:
+
+| Run | CPU time |
+| --- | --- |
+| Nothing due, or repo unchanged | 1–3 ms |
+| Save a 1 MB repo | 8 ms |
+| Save a 10 MB repo | 22 ms |
+| Save a 23 MB repo | 39 ms |
+| Save a 51 MB repo | 98 ms |
+
+Every one of those runs succeeded, because Cloudflare tolerates occasional overruns on the Free plan. That is
+Cloudflare's policy, not a guarantee: it can change, and an account that overruns on every run may be cut off. A
+run that is stopped shows as **Interrupted**, keeps the existing copies, and is retried on schedule. For backups you
+depend on, use Workers Paid.
 
 Upgrading to Workers Paid removes all of this (DEPLOY.md, "Switching to Workers Paid").
 

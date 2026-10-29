@@ -15,7 +15,7 @@ Give your coding agent (Claude Code, Codex, Cursor…) this prompt:
 
 > Deploy Holdfast to my Cloudflare account. Clone https://github.com/rohanprasadofficial/holdfast and follow DEPLOY.md in it step by step. Ask me which Cloudflare account and which GitHub accounts to back up, and stop whenever a step needs me.
 
-Works on the Workers Free plan in free mode (repos up to 25 MB, two every 5 minutes), or without limits on
+Works on the Workers Free plan in free mode (repos up to 50 MB, one new copy every 5 minutes), or without limits on
 Workers Paid ($5/month). The agent does everything else. You approve three things: the Cloudflare login, a read-only GitHub token
 (from a pre-filled link), and the Access sign-in. [`DEPLOY.md`](DEPLOY.md) also works by hand.
 
@@ -73,7 +73,7 @@ run `npm run site:deploy`. `npm run site:dev` previews it. Forks: replace `rohan
 ## Limits
 
 Only git data is saved (no issues, PRs or LFS files), private repos work on GitHub only, very large repos may
-not finish in one run, and free mode caps repos at 25 MB. Read [LIMITATIONS.md](LIMITATIONS.md) before relying on it.
+not finish in one run, and free mode caps repos at 50 MB. Read [LIMITATIONS.md](LIMITATIONS.md) before relying on it.
 
 ---
 

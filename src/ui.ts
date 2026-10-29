@@ -134,7 +134,7 @@ const repoRow = (r: Repo) => html`
       <input type="hidden" name="back" value="/"><button class="btn line sm">Back up now</button></form></td>
   </tr>`;
 
-const FREE_LIMITS = `Each run gets 10 ms of CPU, so Holdfast backs up at most ${FREE.perRun} repositories every 5 minutes, skips GitHub repositories over ${FREE.maxMb} MB, and lists watched accounts in the background.`;
+const FREE_LIMITS = `Each run gets 10 ms of CPU, so Holdfast saves at most one new copy every 5 minutes (unchanged repositories are checked ${FREE.checksPerRun} at a time), skips GitHub repositories over ${FREE.maxMb} MB, and lists watched accounts in the background.`;
 const freeNotice = () => html`<section class="band"><div class="col"><div class="notice"><span class="tag static">Workers Free</span>
   <p>Running in free mode. ${FREE_LIMITS} <a href="/settings">Plan details</a></p></div></div></section>`;
 
@@ -258,7 +258,8 @@ export function settingsPage(user: string, settings: Settings, tokens: TokenStat
         <p class="muted small">Set when Holdfast is deployed (<code>vars.PLAN</code> in <code>wrangler.jsonc</code>).</p></div>
       <div class="cell pad">${free
         ? html`<span class="status queued">Workers Free · free mode</span><p class="small">${FREE_LIMITS} Larger repositories show
-          "Too large for the Workers Free plan". To remove these limits, upgrade the Cloudflare account to Workers Paid ($5/month),
+          "Too large for the Workers Free plan". Saving a copy takes more than 10 ms and relies on Cloudflare tolerating
+          occasional overruns (see LIMITATIONS.md). To remove these limits, upgrade the Cloudflare account to Workers Paid ($5/month),
           then follow "Switching to Workers Paid" in DEPLOY.md.</p>`
         : html`<span class="status ok">Workers Paid</span><p class="small">Repositories of any normal size stream straight into R2,
           up to 20 per run.</p>`}</div>

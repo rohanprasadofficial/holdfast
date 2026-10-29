@@ -58,10 +58,11 @@ Note the `https://holdfast.<subdomain>.workers.dev` URL. Opening it now shows **
 **If the deploy fails with `CPU limits are not supported for the Free plan`,** the account is on Workers Free.
 The R2 bucket and D1 database are fine. **Ask the user** which they want:
 
-- **Upgrade to Workers Paid** ($5/month). Choose this for repos over 25 MB or for many repos on short schedules.
+- **Upgrade to Workers Paid** ($5/month). Choose this for repos over 50 MB or for many repos on short schedules.
   Send them to `https://dash.cloudflare.com/<account_id>/workers/plans`, wait until they're done, then run `npm run deploy` again.
-- **Free mode** (no cost). Each run gets 10 ms of CPU, so free mode backs up at most 2 repos every 5 minutes and
-  skips GitHub repos larger than 25 MB, telling the user so in the portal. In `wrangler.jsonc`, delete the
+- **Free mode** (no cost). Each run gets 10 ms of CPU, so free mode saves at most one new copy every 5 minutes and
+  skips GitHub repos larger than 50 MB, telling the user so in the portal. Saving a copy goes over 10 ms (about
+  2 ms per MB) and relies on Cloudflare tolerating occasional overruns; LIMITATIONS.md has the numbers. In `wrangler.jsonc`, delete the
   `"limits"` line and set `"vars": { "PLAN": "free" }`, then run `npm run deploy` again.
 
 ## 4. Lock it with Cloudflare Access

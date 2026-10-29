@@ -26,6 +26,11 @@ async function insertRepos(env: Env, urls: string[], sourceId: number | null, in
   if (stmts.length) await env.DB.batch(stmts);
 }
 
+/** Claims due repos atomically, so overlapping cron runs never back up the same repo twice. */
+const claimDue = async (env: Env, now: number, limit: number) => (await env.DB.prepare(
+  "UPDATE repos SET next_run_at = ?1 + interval_min * 60000, started_at = ?1 WHERE id IN (SELECT id FROM repos WHERE paused = 0 AND next_run_at <= ?1 ORDER BY next_run_at LIMIT ?2) RETURNING *",
+).bind(now, limit).all<Repo>()).results;
+
 async function handle(req: Request, env: Env, user: string): Promise<Response> {
   const url = new URL(req.url);
   const flash: Flash = { ok: url.searchParams.get("ok") ?? undefined, err: url.searchParams.get("err") ?? undefined };
@@ -184,11 +189,16 @@ export default {
     }
     if (free && stale.length) return; // Free plan: that listing used this run's CPU; backups continue next run
 
-    // Claim due repos atomically so overlapping cron runs never back up the same repo twice.
-    const due = (await env.DB.prepare(
-      "UPDATE repos SET next_run_at = ?1 + interval_min * 60000, started_at = ?1 WHERE id IN (SELECT id FROM repos WHERE paused = 0 AND next_run_at <= ?1 ORDER BY next_run_at LIMIT ?2) RETURNING *",
-    ).bind(now, free ? FREE.perRun : 20).all<Repo>()).results;
-    await Promise.all(Array.from({ length: free ? 1 : 4 }, async () => {
+    if (free) {
+      // Unchanged checks are cheap but saving a copy isn't, so stop after the first new copy.
+      for (let i = 0; i < FREE.checksPerRun; i++) {
+        const [r] = await claimDue(env, now, 1);
+        if (!r || (await runBackup(env, r)).saved) break;
+      }
+      return;
+    }
+    const due = await claimDue(env, now, 20);
+    await Promise.all(Array.from({ length: 4 }, async () => {
       for (let r; (r = due.shift()); ) await runBackup(env, r);
     }));
   },

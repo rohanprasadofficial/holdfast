@@ -57,7 +57,7 @@ test("free mode saves a small repo as one bundle", async () => {
   const { env, puts } = fakeEnv();
   try {
     const r = await runBackup(env, repo);
-    assert.deepEqual(r, { ok: true, message: "Saved a new copy" });
+    assert.deepEqual(r, { ok: true, saved: true, message: "Saved a new copy" });
     assert.equal(puts.length, 1);
     assert.match(puts[0].key, /^repos\/github\.com\/acme\/app\/.+\.bundle$/);
     assert.equal(await puts[0].body.text(), `# v2 git bundle\n${SHA} HEAD\n${SHA} refs/heads/main\n\nPACKfake`);

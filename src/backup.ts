@@ -11,9 +11,10 @@ export type Repo = {
 const PART = 5 * 1024 * 1024; // R2 multipart: every part but the last must be the same size (min 5 MiB)
 const RETRY_MIN = 30;
 
-// Workers Free gives each run 10 ms of CPU, so free mode (vars.PLAN = "free") stays small: a few repos per run,
-// a size cap checked before downloading, and one native read + put instead of streaming through JS.
-export const FREE = { perRun: 2, maxMb: 25 };
+// Workers Free gives each run 10 ms of CPU (Cloudflare tolerates occasional overruns). Measured on a Free account:
+// an unchanged check costs ~2 ms and saving a copy ~2 ms per MB (50 MB: 98 ms). So free mode (vars.PLAN = "free")
+// checks a few repos per run but saves at most one copy, caps repo size, and reads the pack in one native call.
+export const FREE = { checksPerRun: 4, maxMb: 50 };
 export const isFree = (env: Env) => (env.PLAN as string) === "free";
 // A run still marked as started after this long was cut off (time or CPU limit) and never reported back.
 export const STALE_MS = 20 * 60_000;
@@ -35,12 +36,13 @@ export function gitHeaders(url: string, env: Env): Record<string, string> {
 }
 
 /** Checks one repo and saves a new copy if any branch or tag moved. Never throws; the outcome lands in D1. */
-export async function runBackup(env: Env, repo: Repo): Promise<{ ok: boolean; message: string }> {
+export async function runBackup(env: Env, repo: Repo): Promise<{ ok: boolean; saved?: boolean; message: string }> {
   const now = Date.now();
   try {
     const { refs, base } = await listRefs(repo.url, gitHeaders(repo.url, env));
     const hash = await sha256(refs.map((r) => `${r.sha} ${r.name}`).join("\n"));
     let message = refs.length ? "No changes since the last copy" : "Repository is empty, nothing to save";
+    let saved = false;
     if (refs.length && hash !== repo.refs_hash) {
       const free = isFree(env);
       const u = new URL(repo.url);
@@ -57,9 +59,10 @@ export async function runBackup(env: Env, repo: Repo): Promise<{ ok: boolean; me
       await prune(env, prefix(repo)).catch(() => {}); // best effort: an R2 bucket lock may block deletes, the new copy is saved
       await env.DB.prepare("UPDATE repos SET refs_hash = ?, last_saved_at = ?, size = ? WHERE id = ?").bind(hash, now, size, repo.id).run();
       message = "Saved a new copy";
+      saved = true;
     }
     await env.DB.prepare("UPDATE repos SET status = 'ok', error = NULL, started_at = NULL, last_checked_at = ? WHERE id = ?").bind(now, repo.id).run();
-    return { ok: true, message };
+    return { ok: true, saved, message };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     await env.DB.prepare("UPDATE repos SET status = 'error', error = ?, started_at = NULL, last_checked_at = ?, next_run_at = ? WHERE id = ?")
