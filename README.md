@@ -6,7 +6,7 @@ Self-hosted backups of your GitHub repos, running entirely on your own Cloudflar
 - Pick any schedule per repo, from every 5 minutes to every 365 days.
 - Each backup is a standard **git bundle** with full history, every branch and tag, stored in **R2**. Restore with `git clone backup.bundle`.
 - A copy is only saved when something changed. Old copies expire after the retention set in **Settings** (30 days by default), and the newest copy of each repo is always kept.
-- A repo deleted upstream or a force-push never deletes your copies.
+- A repo deleted upstream never deletes your copies. After a force-push, the copies from before it stay for the retention period, or forever with retention 0.
 - Login is handled by **Cloudflare Access**. No passwords to manage.
 
 ## Deploy
@@ -15,9 +15,13 @@ Give your coding agent (Claude Code, Codex, Cursor…) this prompt:
 
 > Deploy Holdfast to my Cloudflare account. Clone https://github.com/rohanprasadofficial/holdfast and follow DEPLOY.md in it step by step. Ask me which Cloudflare account and which GitHub accounts to back up, and stop whenever a step needs me.
 
-Works on the Workers Free plan in free mode (repos up to 50 MB, one new copy every 5 minutes), or without limits on
-Workers Paid ($5/month). The agent does everything else. You approve three things: the Cloudflare login, a read-only GitHub token
-(from a pre-filled link), and the Access sign-in. [`DEPLOY.md`](DEPLOY.md) also works by hand.
+The agent does everything else. You approve three things: the Cloudflare login, a read-only GitHub token
+(from a pre-filled link), and the Access sign-in. On a new Cloudflare account you also turn on R2 and Zero Trust
+once in the dashboard. Both have free tiers but ask for a payment method. [`DEPLOY.md`](DEPLOY.md) also works by hand.
+
+**Plan:** Workers Paid ($5/month) is recommended. Holdfast also runs on the Workers Free plan in free mode, with
+limits and a risk: repos up to 50 MB, one new copy every 5 minutes, and saving a copy goes over the Free plan's
+CPU limit, which Cloudflare tolerates only occasionally. See [LIMITATIONS.md](LIMITATIONS.md#workers-free-plan-free-mode).
 
 ## How it works
 
@@ -28,7 +32,7 @@ packfile containing every object and streams it into R2 as a bundle.
 | Piece | Role |
 |---|---|
 | Worker (`src/`) | portal pages + backup logic |
-| Cron trigger | every 5 min, backs up repos that are due (up to 20 per run, 4 at a time) |
+| Cron trigger | every 5 min, backs up repos that are due (up to 20 per run, 4 at a time; free mode: one new copy) |
 | D1 | repos, schedules, status |
 | R2 | `repos/<host>/<owner>/<repo>/<timestamp>.bundle` |
 | Cloudflare Access | Worker-level sign-in; the Worker refuses any request Access didn't authenticate |

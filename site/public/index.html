@@ -78,7 +78,7 @@
       </div>
       <div class="cell feat">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
-        <h3>Deletions don't follow</h3><p>A deleted repo or a force-push never removes your copies. An optional bucket lock makes them undeletable.</p>
+        <h3>Deletions don't follow</h3><p>A repo deleted on GitHub never removes your copies, and copies from before a force-push stay for your retention period. An optional bucket lock makes them undeletable.</p>
       </div>
     </div>
   </div></section>
@@ -88,13 +88,13 @@
     <div class="cells c3 flush">
       <div class="cell feat step"><span class="num">01</span><h3>Copy the prompt</h3><p>Paste it into Claude Code, Codex, Cursor or any agent that can run commands on your machine.</p></div>
       <div class="cell feat step"><span class="num">02</span><h3>The agent deploys</h3><p>It asks which Cloudflare account and which GitHub accounts to back up, then creates the Worker, the D1 database and the R2 bucket.</p></div>
-      <div class="cell feat step"><span class="num">03</span><h3>You approve three things</h3><p>The Cloudflare login, a read-only GitHub token from a pre-filled link, and the Access sign-in. Backups start within minutes.</p></div>
+      <div class="cell feat step"><span class="num">03</span><h3>You approve three things</h3><p>The Cloudflare login, a read-only GitHub token from a pre-filled link, and the Access sign-in. New Cloudflare accounts also switch on R2 and Zero Trust once. Backups start within minutes.</p></div>
     </div>
   </div></section>
 
   <section class="band"><div class="col">
     <div class="cells c2 flush">
-      <div class="cell feat"><span class="label">Cost</span><h3>Free, or $5 a month for big repos</h3><p>On the Workers Free plan, Holdfast runs in free mode: repos up to 50 MB, one new copy every 5 minutes. Workers Paid removes those limits. Personal backups usually fit in R2's free 10 GB, and R2 charges nothing for downloads.</p></div>
+      <div class="cell feat"><span class="label">Cost</span><h3>$5 a month recommended, or free with limits</h3><p>Workers Paid is recommended. On the Workers Free plan, Holdfast runs in free mode: repos up to 50 MB, one new copy every 5 minutes, relying on Cloudflare tolerating CPU overruns. Personal backups usually fit in R2's free 10 GB, and R2 charges nothing for downloads.</p></div>
       <div class="cell feat"><span class="label">Limits</span><h3>Know what it doesn't do</h3><p>Git data only (no issues or pull requests yet), private repos on GitHub only, and very large repos may not finish in one run. <a href="/limitations.md">Read all limitations →</a></p></div>
     </div>
   </div></section>

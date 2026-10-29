@@ -67,11 +67,19 @@ Upgrading to Workers Paid removes all of this (DEPLOY.md, "Switching to Workers 
 - **If your Cloudflare account is compromised,** copies can be deleted, unless you add the optional R2 bucket lock
   (DEPLOY.md, security checklist).
 - **Holdfast never writes to GitHub,** and its tokens should be read-only.
+- **A force-push is saved as a new copy.** Copies from before it are deleted once they're older than the retention
+  period, so someone who can push to your repos can eventually replace your history. Keep retention long enough to
+  notice, or set it to 0 to keep every copy.
+- **Only add git hosts you trust.** Holdfast doesn't cap what a git server sends back, so a hostile server can make
+  its own and other backups in the same run fail, or fill your bucket with large copies. GitHub repos are size-checked
+  in free mode only.
 
 ## Cost
 
-- **Workers Free:** $0, in free mode with the limits above.
-- **Workers Paid** ($5/month): no free-mode limits, and large repos stream straight into storage.
+- **Workers Paid** ($5/month), recommended: no free-mode limits, and large repos stream straight into storage.
+- **Workers Free:** $0, in free mode with the limits and risk above.
+- **New accounts** turn on R2 and Zero Trust once in the dashboard. Both have free tiers, but each asks for a
+  payment method.
 - **R2 and D1** usually stay inside their free tiers for personal use (R2: 10 GB stored). Large or busy
   accounts pay standard R2 storage rates. R2 has no download (egress) fees.
 

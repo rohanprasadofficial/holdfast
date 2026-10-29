@@ -33,7 +33,9 @@ const claimDue = async (env: Env, now: number, limit: number) => (await env.DB.p
 
 async function handle(req: Request, env: Env, user: string): Promise<Response> {
   const url = new URL(req.url);
-  const flash: Flash = { ok: url.searchParams.get("ok") ?? undefined, err: url.searchParams.get("err") ?? undefined };
+  // Show messages only after our own redirects, so a link from elsewhere can't plant a fake status message.
+  const flash: Flash = req.headers.get("Sec-Fetch-Site") === "same-origin"
+    ? { ok: url.searchParams.get("ok") ?? undefined, err: url.searchParams.get("err") ?? undefined } : {};
   const post = req.method === "POST";
   const form = post ? await req.formData().catch(() => new FormData()) : null;
 

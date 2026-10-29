@@ -266,7 +266,8 @@ export function settingsPage(user: string, settings: Settings, tokens: TokenStat
 
       <div class="cell pad"><h3>Retention</h3>
         <p class="muted small">A new copy is saved only when a branch or tag changed. Copies older than this are deleted after the next new copy.
-        The newest copy of every repository is always kept. Set 0 to keep everything forever.</p></div>
+        The newest copy of every repository is always kept. A force-push is saved as a new copy, so copies from before it
+        are deleted once they are older than this. Set 0 to keep everything forever.</p></div>
       <div class="cell pad"><form class="row" method="post" action="/settings">
         <span class="every"><span>Keep copies for</span><input name="retention_days" type="number" min="0" max="3650" step="1" value="${settings.retention_days}" required aria-label="Days"><span>days</span></span>
         <button class="btn line">Save</button></form></div>
