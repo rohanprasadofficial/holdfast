@@ -154,3 +154,6 @@ footer.band{border-bottom:0;border-top:1px solid var(--line)}
 .tokens li>div{display:grid;gap:2px}
 .foot p{margin:0;flex-basis:100%;max-width:80ch}
 @media (max-width:900px){.rows{grid-template-columns:1fr}}
+.notice{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 28px;background:var(--tint)}
+.notice p{margin:0;font-size:14px}
+.rows .status+p{margin-top:8px}

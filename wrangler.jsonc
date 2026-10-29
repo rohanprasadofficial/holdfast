@@ -6,8 +6,10 @@
   "observability": { "enabled": true },
   // Check for due backups every 5 minutes (also the shortest allowed schedule).
   "triggers": { "crons": ["*/5 * * * *"] },
-  // Streaming large repos needs more than the 30s default CPU budget.
+  // Workers Paid: CPU budget for streaming large repos ("Back up now" can use all of it; scheduled runs get 30s).
+  // Workers Free: delete this line and set PLAN to "free" below (see DEPLOY.md).
   "limits": { "cpu_ms": 300000 },
+  "vars": { "PLAN": "paid" },
   "d1_databases": [{ "binding": "DB", "database_name": "holdfast", "migrations_dir": "migrations" }],
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "holdfast" }],
   // Retention and the default schedule live in the portal's Settings page (D1 "settings" table).

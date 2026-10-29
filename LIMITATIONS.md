@@ -23,11 +23,28 @@ Holdfast is small on purpose. This is what it does not do yet, and what to keep 
   5 minutes of being due.
 - **Up to 20 repos start per 5-minute run.** The very first backup of a large account is spread over a while
   (about 240 repos an hour).
-- **One backup has a time limit** (15 minutes on a schedule, 5 minutes of CPU). Very large repos, around several GB,
-  may not finish. They show as **Interrupted** and are retried on schedule.
+- **One backup has a time limit.** Scheduled runs get 15 minutes in total and 30 seconds of CPU; **Back up now**
+  gets up to 5 minutes of CPU. Very large repos, around several GB, may not finish. They show as **Interrupted**
+  and are retried on schedule.
 - **Each new copy is a full copy,** not just the changes since the last one. A large repo that changes often uses
   more storage. Retention (Settings) controls how long old copies stay.
 - **All times are shown in UTC.**
+
+## Workers Free plan (free mode)
+
+Holdfast also runs on the Workers Free plan. Each run then gets only **10 ms of CPU time**, so free mode is
+deliberately small:
+
+- **At most 2 repositories are backed up every 5 minutes,** which is about 575 checks a day. Unchanged repos are quick,
+  but many repos on short schedules will run late.
+- **GitHub repositories larger than 25 MB are skipped.** They show "Too large for the Workers Free plan". Repos on
+  other hosts can't be measured first; if one is too big, it shows as **Interrupted**.
+- **Watched accounts are listed in the background,** one per run. Very large organizations (hundreds of repos) may
+  not finish listing within the CPU limit.
+- **Cloudflare tolerates the occasional overrun,** but the 25 MB cap is an estimate. A repo near it may sometimes
+  show as Interrupted.
+
+Upgrading to Workers Paid removes all of this (DEPLOY.md, "Switching to Workers Paid").
 
 ## Trust and security
 
@@ -40,7 +57,8 @@ Holdfast is small on purpose. This is what it does not do yet, and what to keep 
 
 ## Cost
 
-- **Workers Paid plan** ($5/month) is required for the CPU time large backups need.
+- **Workers Free:** $0, in free mode with the limits above.
+- **Workers Paid** ($5/month): no free-mode limits, and large repos stream straight into storage.
 - **R2 and D1** usually stay inside their free tiers for personal use (R2: 10 GB stored). Large or busy
   accounts pay standard R2 storage rates. R2 has no download (egress) fees.
 

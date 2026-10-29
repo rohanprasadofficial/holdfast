@@ -1,4 +1,4 @@
-import { listCopies, prefix, runBackup, type Repo } from "./backup.ts";
+import { FREE, isFree, listCopies, prefix, runBackup, type Repo } from "./backup.ts";
 import { checkToken, listOwnerRepos, parseTarget, tokenFor } from "./github.ts";
 import { describeInterval, parseInterval } from "./schedule.ts";
 import { getSettings, parseRetention, saveSetting } from "./settings.ts";
@@ -35,7 +35,7 @@ async function handle(req: Request, env: Env, user: string): Promise<Response> {
   if (url.pathname === "/" && !post) {
     const repos = (await env.DB.prepare("SELECT * FROM repos ORDER BY status = 'error' DESC, name").all<Repo>()).results;
     const sources = (await env.DB.prepare("SELECT * FROM sources ORDER BY owner").all<Source>()).results;
-    return page(homePage(user, repos, sources, await getSettings(env.DB), flash));
+    return page(homePage(user, repos, sources, await getSettings(env.DB), isFree(env), flash));
   }
 
   if (url.pathname === "/settings" && !post) {
@@ -43,7 +43,7 @@ async function handle(req: Request, env: Env, user: string): Promise<Response> {
     const secrets = env as unknown as Record<string, unknown>;
     const names = Object.keys(secrets).filter((k) => /^GITHUB_TOKEN(_[A-Z0-9_]+)?$/.test(k) && typeof secrets[k] === "string" && secrets[k]).sort();
     const tokens = await Promise.all(names.map(async (name) => ({ name, ...(await checkToken(secrets[name] as string)) })));
-    return page(settingsPage(user, await getSettings(env.DB), tokens, flash));
+    return page(settingsPage(user, await getSettings(env.DB), tokens, isFree(env), flash));
   }
 
   if (url.pathname === "/settings" && form) {
@@ -71,6 +71,12 @@ async function handle(req: Request, env: Env, user: string): Promise<Response> {
       return redirect("/", { ok: r?.last_checked_at
         ? `${target.url} is now backed up ${describeInterval(interval).toLowerCase()}.`
         : `Added ${target.url}. The first backup starts within 5 minutes.` });
+    }
+    if (isFree(env)) {
+      // Listing a big account can take more than the Free plan's 10 ms of CPU, so the scheduler does it in the background.
+      await env.DB.prepare("INSERT INTO sources (owner, interval_min) VALUES (?, ?) ON CONFLICT(owner) DO UPDATE SET interval_min = excluded.interval_min, synced_at = 0, error = NULL")
+        .bind(target.owner, interval).run();
+      return redirect("/", { ok: `Watching ${target.owner}. Its repositories are listed within 5 minutes, then backed up a few at a time.` });
     }
     let urls: string[];
     try {
@@ -160,23 +166,29 @@ export default {
 
   async scheduled(_controller, env) {
     const now = Date.now();
+    const free = isFree(env);
 
-    // Pick up repos created since the last daily sync of each watched owner.
-    const stale = (await env.DB.prepare("SELECT * FROM sources WHERE synced_at < ?").bind(now - 86_400_000).all<Source>()).results;
+    // Pick up repos created since the last daily sync of each watched owner. Marked synced first, so a run
+    // that gets cut off doesn't retry the same listing forever; an error retries in an hour (not every run,
+    // which on Free would starve the backups below).
+    const stale = (await env.DB.prepare("SELECT * FROM sources WHERE synced_at < ? ORDER BY synced_at LIMIT ?")
+      .bind(now - 86_400_000, free ? 1 : 100).all<Source>()).results;
     for (const s of stale) {
+      await env.DB.prepare("UPDATE sources SET synced_at = ? WHERE id = ?").bind(now, s.id).run();
       try {
         await insertRepos(env, await listOwnerRepos(s.owner, tokenFor(env, s.owner)), s.id, s.interval_min);
-        await env.DB.prepare("UPDATE sources SET synced_at = ?, error = NULL WHERE id = ?").bind(now, s.id).run();
+        await env.DB.prepare("UPDATE sources SET error = NULL WHERE id = ?").bind(s.id).run();
       } catch (e) {
-        await env.DB.prepare("UPDATE sources SET error = ? WHERE id = ?").bind((e as Error).message, s.id).run();
+        await env.DB.prepare("UPDATE sources SET error = ?, synced_at = ? WHERE id = ?").bind((e as Error).message, now - 86_400_000 + 3_600_000, s.id).run();
       }
     }
+    if (free && stale.length) return; // Free plan: that listing used this run's CPU; backups continue next run
 
     // Claim due repos atomically so overlapping cron runs never back up the same repo twice.
     const due = (await env.DB.prepare(
-      "UPDATE repos SET next_run_at = ?1 + interval_min * 60000, started_at = ?1 WHERE id IN (SELECT id FROM repos WHERE paused = 0 AND next_run_at <= ?1 ORDER BY next_run_at LIMIT 20) RETURNING *",
-    ).bind(now).all<Repo>()).results;
-    await Promise.all(Array.from({ length: 4 }, async () => {
+      "UPDATE repos SET next_run_at = ?1 + interval_min * 60000, started_at = ?1 WHERE id IN (SELECT id FROM repos WHERE paused = 0 AND next_run_at <= ?1 ORDER BY next_run_at LIMIT ?2) RETURNING *",
+    ).bind(now, free ? FREE.perRun : 20).all<Repo>()).results;
+    await Promise.all(Array.from({ length: free ? 1 : 4 }, async () => {
       for (let r; (r = due.shift()); ) await runBackup(env, r);
     }));
   },

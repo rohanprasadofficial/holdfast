@@ -64,3 +64,10 @@ export async function checkToken(token: string): Promise<{ ok: boolean; login?: 
   if (!res.ok) return { ok: false, detail: res.status === 401 ? "Rejected by GitHub: expired or revoked" : `GitHub error (HTTP ${res.status})` };
   return { ok: true, login: (await res.json<{ login: string }>()).login, expires: res.headers.get("github-authentication-token-expiration") };
 }
+
+/** GitHub's approximate size of a repo in KB, or null when it won't say (the check is then skipped). */
+export async function repoSizeKb(url: string, token: string | undefined): Promise<number | null> {
+  const [, owner, repo] = new URL(url).pathname.split("/");
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: headers(token) }).catch(() => null);
+  return res?.ok ? (await res.json<{ size: number }>()).size : null;
+}

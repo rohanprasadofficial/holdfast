@@ -6,7 +6,8 @@
 > If a command fails, show the error and fix the cause before moving on.
 
 **What gets created:** one Worker (`holdfast`), one D1 database, one R2 bucket, one Cloudflare Access policy.
-**Cost:** the Workers Paid plan ($5/month) is required. D1 and R2 usually stay inside their free tiers.
+**Cost:** free on the Workers Free plan, in free mode with limits (step 3). Workers Paid ($5/month) removes the limits.
+D1 and R2 usually stay inside their free tiers either way.
 **The user approves exactly three things:** the Cloudflare login, a read-only GitHub token, and the Access sign-in.
 
 ## 0. Get the code
@@ -54,8 +55,14 @@ npm run deploy
 ```
 
 Note the `https://holdfast.<subdomain>.workers.dev` URL. Opening it now shows **"Locked"**, which is expected.
-If the deploy fails with a message about the plan or CPU limits, the account needs Workers Paid:
-send the user to `https://dash.cloudflare.com/<account_id>/workers/plans`.
+**If the deploy fails with `CPU limits are not supported for the Free plan`,** the account is on Workers Free.
+The R2 bucket and D1 database are fine. **Ask the user** which they want:
+
+- **Upgrade to Workers Paid** ($5/month). Choose this for repos over 25 MB or for many repos on short schedules.
+  Send them to `https://dash.cloudflare.com/<account_id>/workers/plans`, wait until they're done, then run `npm run deploy` again.
+- **Free mode** (no cost). Each run gets 10 ms of CPU, so free mode backs up at most 2 repos every 5 minutes and
+  skips GitHub repos larger than 25 MB, telling the user so in the portal. In `wrangler.jsonc`, delete the
+  `"limits"` line and set `"vars": { "PLAN": "free" }`, then run `npm run deploy` again.
 
 ## 4. Lock it with Cloudflare Access
 
@@ -130,6 +137,11 @@ Walk the user through these before calling the deployment finished:
 ```sh
 git pull && npm install && npm run migrate && npm run deploy
 ```
+
+## Switching to Workers Paid
+
+After upgrading the account, put back `"limits": { "cpu_ms": 300000 }` in `wrangler.jsonc`, set
+`"vars": { "PLAN": "paid" }`, and run `npm run deploy`. Repos skipped as too large are backed up on their next run.
 
 ## Settings
 

@@ -1,4 +1,4 @@
-import { STALE_MS, repoState, type Repo } from "./backup.ts";
+import { FREE, STALE_MS, repoState, type Repo } from "./backup.ts";
 import { UNITS, describeInterval, splitInterval } from "./schedule.ts";
 import type { Settings } from "./settings.ts";
 
@@ -134,12 +134,17 @@ const repoRow = (r: Repo) => html`
       <input type="hidden" name="back" value="/"><button class="btn line sm">Back up now</button></form></td>
   </tr>`;
 
-export function homePage(user: string, repos: Repo[], sources: Source[], settings: Settings, flash: Flash) {
+const FREE_LIMITS = `Each run gets 10 ms of CPU, so Holdfast backs up at most ${FREE.perRun} repositories every 5 minutes, skips GitHub repositories over ${FREE.maxMb} MB, and lists watched accounts in the background.`;
+const freeNotice = () => html`<section class="band"><div class="col"><div class="notice"><span class="tag static">Workers Free</span>
+  <p>Running in free mode. ${FREE_LIMITS} <a href="/settings">Plan details</a></p></div></div></section>`;
+
+export function homePage(user: string, repos: Repo[], sources: Source[], settings: Settings, free: boolean, flash: Flash) {
   const states = repos.map((r) => repoState(r));
   const failing = states.filter((s) => s === "error" || s === "interrupted").length;
   const healthy = states.filter((s) => s === "ok").length;
   const stored = repos.reduce((n, r) => n + (r.size ?? 0), 0);
   return layout("Repositories", user, html`
+  ${free ? freeNotice() : ""}
   <section class="band"><div class="col">
     <div class="hero">
       ${DIAGRAM}
@@ -239,7 +244,7 @@ function tokenRow(t: TokenStatus) {
     : html`<span class="status ${soon ? "queued" : "ok"}">${t.login} · ${t.expires ? `expires ${ago(expiresAt)}` : "no expiry date"}</span>`}</li>`;
 }
 
-export function settingsPage(user: string, settings: Settings, tokens: TokenStatus[], flash: Flash) {
+export function settingsPage(user: string, settings: Settings, tokens: TokenStatus[], free: boolean, flash: Flash) {
   return layout("Settings", user, html`
   <section class="band"><div class="col">
     <div class="page-head"><div>
@@ -249,6 +254,15 @@ export function settingsPage(user: string, settings: Settings, tokens: TokenStat
       <p class="muted">These apply to the whole portal. Each repository's own schedule is set on its page.</p>
     </div></div>
     <div class="cells rows flush">
+      <div class="cell pad"><h3>Plan</h3>
+        <p class="muted small">Set when Holdfast is deployed (<code>vars.PLAN</code> in <code>wrangler.jsonc</code>).</p></div>
+      <div class="cell pad">${free
+        ? html`<span class="status queued">Workers Free · free mode</span><p class="small">${FREE_LIMITS} Larger repositories show
+          "Too large for the Workers Free plan". To remove these limits, upgrade the Cloudflare account to Workers Paid ($5/month),
+          then follow "Switching to Workers Paid" in DEPLOY.md.</p>`
+        : html`<span class="status ok">Workers Paid</span><p class="small">Repositories of any normal size stream straight into R2,
+          up to 20 per run.</p>`}</div>
+
       <div class="cell pad"><h3>Retention</h3>
         <p class="muted small">A new copy is saved only when a branch or tag changed. Copies older than this are deleted after the next new copy.
         The newest copy of every repository is always kept. Set 0 to keep everything forever.</p></div>

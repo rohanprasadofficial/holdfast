@@ -1,5 +1,5 @@
-import { bundleHeader, fetchPack, listRefs } from "./git.ts";
-import { tokenFor } from "./github.ts";
+import { bundleHeader, fetchPack, fetchPackBytes, listRefs } from "./git.ts";
+import { repoSizeKb, tokenFor } from "./github.ts";
 import { getSettings } from "./settings.ts";
 
 export type Repo = {
@@ -10,6 +10,11 @@ export type Repo = {
 
 const PART = 5 * 1024 * 1024; // R2 multipart: every part but the last must be the same size (min 5 MiB)
 const RETRY_MIN = 30;
+
+// Workers Free gives each run 10 ms of CPU, so free mode (vars.PLAN = "free") stays small: a few repos per run,
+// a size cap checked before downloading, and one native read + put instead of streaming through JS.
+export const FREE = { perRun: 2, maxMb: 25 };
+export const isFree = (env: Env) => (env.PLAN as string) === "free";
 // A run still marked as started after this long was cut off (time or CPU limit) and never reported back.
 export const STALE_MS = 20 * 60_000;
 
@@ -37,9 +42,18 @@ export async function runBackup(env: Env, repo: Repo): Promise<{ ok: boolean; me
     const hash = await sha256(refs.map((r) => `${r.sha} ${r.name}`).join("\n"));
     let message = refs.length ? "No changes since the last copy" : "Repository is empty, nothing to save";
     if (refs.length && hash !== repo.refs_hash) {
-      const pack = await fetchPack(base, refs, gitHeaders(base, env));
+      const free = isFree(env);
+      const u = new URL(repo.url);
+      if (free && u.hostname === "github.com") {
+        const kb = await repoSizeKb(repo.url, tokenFor(env, u.pathname.split("/")[1] ?? ""));
+        if (kb != null && kb > FREE.maxMb * 1024)
+          throw new Error(`Too large for the Workers Free plan: about ${Math.round(kb / 1024)} MB, and free mode handles up to ${FREE.maxMb} MB. Upgrade to Workers Paid to back it up. Existing copies are kept.`);
+      }
       const key = `${prefix(repo)}${new Date(now).toISOString().replace(/[:.]/g, "-")}.bundle`;
-      const size = await upload(env.BUCKET, key, (async function* () { yield bundleHeader(refs); yield* pack; })());
+      const header = bundleHeader(refs);
+      const size = free
+        ? await putWhole(env.BUCKET, key, header, await fetchPackBytes(base, refs, gitHeaders(base, env)))
+        : await upload(env.BUCKET, key, (async function* () { yield header; yield* await fetchPack(base, refs, gitHeaders(base, env)); })());
       await prune(env, prefix(repo)).catch(() => {}); // best effort: an R2 bucket lock may block deletes, the new copy is saved
       await env.DB.prepare("UPDATE repos SET refs_hash = ?, last_saved_at = ?, size = ? WHERE id = ?").bind(hash, now, size, repo.id).run();
       message = "Saved a new copy";
@@ -52,6 +66,11 @@ export async function runBackup(env: Env, repo: Repo): Promise<{ ok: boolean; me
       .bind(message, now, now + Math.min(repo.interval_min, RETRY_MIN) * 60_000, repo.id).run();
     return { ok: false, message };
   }
+}
+
+async function putWhole(bucket: R2Bucket, key: string, header: Uint8Array, pack: Uint8Array) {
+  await bucket.put(key, new Blob([header, pack]), { httpMetadata: { contentType: "application/x-git-bundle" } });
+  return header.length + pack.length;
 }
 
 async function upload(bucket: R2Bucket, key: string, chunks: AsyncIterable<Uint8Array>) {

@@ -51,8 +51,7 @@ export async function listRefs(repoUrl: string, headers: Record<string, string>)
   return { refs, base: url.replace(/\/info\/refs\?.*$/, "") };
 }
 
-/** Raw packfile containing every object reachable from `refs`. */
-export async function fetchPack(base: string, refs: Ref[], headers: Record<string, string>) {
+async function requestPack(base: string, refs: Ref[], headers: Record<string, string>) {
   const wants = [...new Set(refs.map((r) => r.sha))];
   // No side-band capability requested, so the server replies "NAK" then the raw pack.
   const body = wants.map((sha, i) => pkt(`want ${sha}${i ? "" : " ofs-delta agent=git/holdfast"}\n`)).join("") + "0000" + pkt("done\n");
@@ -63,7 +62,20 @@ export async function fetchPack(base: string, refs: Ref[], headers: Record<strin
     redirect: "manual", // never carry credentials through a redirect
   });
   if (!res.ok || !res.body) throw new Error(`Git server error during download: HTTP ${res.status}`);
-  return res.body.pipeThrough(skipNak());
+  return res;
+}
+
+/** Raw packfile containing every object reachable from `refs`, streamed. */
+export async function fetchPack(base: string, refs: Ref[], headers: Record<string, string>) {
+  return (await requestPack(base, refs, headers)).body!.pipeThrough(skipNak());
+}
+
+/** Same pack read in one native call: far less CPU than streaming through JS, but it must fit in memory. */
+export async function fetchPackBytes(base: string, refs: Ref[], headers: Record<string, string>) {
+  const buf = new Uint8Array(await (await requestPack(base, refs, headers)).arrayBuffer());
+  if (dec.decode(buf.subarray(0, 8)) !== "0008NAK\n")
+    throw new Error(`Git server refused the download: ${dec.decode(buf.subarray(0, 200)).slice(4).trim()}`);
+  return buf.subarray(8);
 }
 
 function skipNak() {
